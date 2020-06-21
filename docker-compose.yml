@@ -1,0 +1,68 @@
+version: "2"
+volumes:
+  nginx_html:
+networks:
+  default:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy:alpine
+    hostname: "nginx-proxy"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /home/mauriciof96/certs:/etc/nginx/certs:ro
+      - /home/mauriciof96/vhost.d:/etc/nginx/vhost.d
+      - nginx_html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - default
+    labels:
+      com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
+  nginx-letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    volumes:
+      - /home/mauriciof96/certs:/etc/nginx/certs:rw
+      - /home/mauriciof96/vhost.d:/etc/nginx/vhost.d
+      - nginx_html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - default
+    depends_on:
+      - "nginx-proxy"
+  mariadb:
+    image: mariadb
+    hostname: "mariadb"
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: dbprojetowebtg
+      MYSQL_USER: vrum
+      MYSQL_PASSWORD: #####
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    volumes:
+      - /home/mauriciof96/mariadb_data:/var/lib/mysql:rw
+    networks:
+      - backend
+  api:
+    image: mauriciof96/vrum
+    hostname: "api"
+    ports:
+      - "8090:5000"
+    environment:
+      SPRING_PROFILES_ACTIVE: "prod"
+      LETSENCRYPT_EMAIL: "mauricio_godinho2006@hotmail.com"
+      LETSENCRYPT_HOST: "api.vrum.cf"
+      VIRTUAL_HOST: "api.vrum.cf"
+    volumes:
+      - /home/mauriciof96/templates:/usr/src/app/templates:rw
+    networks:
+      - default
+      - backend
+    depends_on:
+      - "nginx-letsencrypt"
+      - "mariadb"

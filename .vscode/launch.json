@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-ProjetoWebApplication<projeto-web-tg>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "mainClass": "br.com.antonio.mauricio.projetoweb.ProjetoWebApplication",
+            "projectName": "projeto-web-tg",
+            "args": ""
+        }
+    ]
+}
